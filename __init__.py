@@ -13,7 +13,7 @@ def author():
 def email():
     return "francescoboccacci@libero.it"
 def repository():
-	return "https://github.com/volterra79/sextante_animove"
+    return "https://github.com/volterra79/sextante_animove"
 def classFactory(iface):
     from animoveProviderPlugin import animoveProviderPlugin
     return animoveProviderPlugin()
