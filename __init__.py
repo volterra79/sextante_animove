@@ -18,4 +18,3 @@ def classFactory(iface):
     from animoveProviderPlugin import animoveProviderPlugin
     return animoveProviderPlugin()
 
-
