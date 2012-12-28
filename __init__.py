@@ -3,7 +3,7 @@ def name():
 def description():
     return "MCP and Kernel functions for UD"
 def version():
-    return "Version 1.0"
+    return "Version 1.1"
 def icon():
     return "icons/animalmove.png"
 def qgisMinimumVersion():
@@ -17,4 +17,5 @@ def repository():
 def classFactory(iface):
     from animoveProviderPlugin import animoveProviderPlugin
     return animoveProviderPlugin()
+
 
