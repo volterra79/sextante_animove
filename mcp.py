@@ -56,6 +56,7 @@ class mcp(GeoAlgorithm):
           
           unique = ftools_utils.getUniqueValues( vproviderA, index )
           nFeat = nFeat * len( unique )
+          #faccio loop per ogni valore unico di quel campo
           outID=0
           for i in unique:
              
@@ -63,7 +64,7 @@ class mcp(GeoAlgorithm):
               hull = []
               first = True
            
-              #####cx and cy are mean coordinates variables
+              #####calcolo il punto medio
               
               cx = 0.00
               cy = 0.00
@@ -83,7 +84,8 @@ class mcp(GeoAlgorithm):
               cy=(cy / n)
               meanPoint = QgsPoint(cx, cy)
               distArea = QgsDistanceArea()
-      
+              
+              #data.append(str(float(dist)))
               #########################
               dist={}
               for inFeat in selectionA:
@@ -91,6 +93,7 @@ class mcp(GeoAlgorithm):
                 idVar = atMap[ index ]
                 if idVar.toString().trimmed() == i.toString().trimmed():
                   if first:
+                    #outID = idVar
                     first = False
                   nElement += 1
                   inGeom = QgsGeometry( inFeat.geometry() )
@@ -147,7 +150,7 @@ class mcp(GeoAlgorithm):
               vproviderA.select( allAttrsA )#, rect )
              
               
-              ##cx and cy are mean coordinates variables
+              #####calcolo il punto medio
               
               cx = 0.00
               cy = 0.00
@@ -175,16 +178,20 @@ class mcp(GeoAlgorithm):
                 idVar = atMap[ index ]
                 if idVar.toString().trimmed() == i.toString().trimmed():
                   if first:
+                    #outID = idVar
                     first = False
                   nElement += 1
                   inGeom = QgsGeometry( inFeat.geometry() )
                   dis_meas = distArea.measureLine(meanPoint, inGeom.asPoint())
                   dist[dis_meas]= inGeom
+                  #points = ftools_utils.extractPoints( inGeom )
                   if perc == 100:
                       
                       points = ftools_utils.extractPoints( inGeom )
                       hull.extend( points )
-             
+                
+                    
+                
                 progress.setPercentage(int(nElement/nFeat * 100))
               if perc <> 100:
                   if perc > 100:
@@ -221,7 +228,7 @@ class mcp(GeoAlgorithm):
             SextanteLog.addToLog(SextanteLog.LOG_WARNING, "Feature exception while computing convex hull")
 
     def defineCharacteristics(self):
-        self.name = "Minimun Convex Poplygon"
+        self.name = "Minimun Convex Polygon"
         self.group = "Tools"
         self.addParameter(ParameterVector(mcp.INPUT, "Input layer", ParameterVector.VECTOR_TYPE_POINT))
         self.addParameter(ParameterTableField(mcp.FIELD, "Field", mcp.INPUT))
@@ -244,3 +251,5 @@ class mcp(GeoAlgorithm):
                       
         return hull          
         
+        
+    #=========================================================
