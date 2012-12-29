@@ -16,8 +16,3 @@ Additionally, restricted Minimum Convex Polygons (MCP) will be implemented, as:
 * MCP calculation of the smallest convex polygon enclosing all the relocations of the animal, excluding an user-selected percentage of locations furthest from a centre.  provider for SEXTANTE and allows to run
 
 --------------------------------------
-
-Inside plugin folder you can find a sample_data directory where is stored a simple shapefiles.
-It is useful to try the plugin.
-
-QGIS_PLUGIN_FOLDER/sample_data/animals.shp 
