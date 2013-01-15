@@ -5,15 +5,14 @@ from PyQt4 import QtGui
 from sextante.core.AlgorithmProvider import AlgorithmProvider
 
 from mcp import mcp
-#from sextante.animove.href import href
+from href import href
 
 
 class animoveAlgorithmProvider(AlgorithmProvider):
 
     def __init__(self):
         AlgorithmProvider.__init__(self)
-        self.alglist = [mcp()]
-                        #,href()]
+        self.alglist = [mcp(),href()]
 
     def getDescription(self):
         return "AniMove (MCP and Kernel analysis UD)"

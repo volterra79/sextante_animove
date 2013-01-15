@@ -14,3 +14,5 @@ Utilization distribution and contour lines will be produced, and area of the con
 Additionally, restricted Minimum Convex Polygons (MCP) will be implemented, as:
 
 * MCP calculation of the smallest convex polygon enclosing all the relocations of the animal, excluding an user-selected percentage of locations furthest from a centre.  provider for SEXTANTE and allows to run
+
+--------------------------------------

@@ -53,21 +53,16 @@ class mcp(GeoAlgorithm):
         if useSelection:
           nFeat = vlayerA.selectedFeatureCount()
           selectionA = vlayerA.selectedFeatures()
-          
           unique = ftools_utils.getUniqueValues( vproviderA, index )
           nFeat = nFeat * len( unique )
-          #faccio loop per ogni valore unico di quel campo
           outID=0
           for i in unique:
              
               nElement=0
               hull = []
               first = True
-           
-              #####calcolo il punto medio
-              
-              cx = 0.00
-              cy = 0.00
+              cx = 0.00 #x of mean coodinate
+              cy = 0.00 #y of mean coordinate
               n = 0
               #vproviderA.rewind()
               while vproviderA.nextFeature(inFeat):
@@ -84,16 +79,12 @@ class mcp(GeoAlgorithm):
               cy=(cy / n)
               meanPoint = QgsPoint(cx, cy)
               distArea = QgsDistanceArea()
-              
-              #data.append(str(float(dist)))
-              #########################
               dist={}
               for inFeat in selectionA:
                 atMap = inFeat.attributeMap()
                 idVar = atMap[ index ]
                 if idVar.toString().trimmed() == i.toString().trimmed():
                   if first:
-                    #outID = idVar
                     first = False
                   nElement += 1
                   inGeom = QgsGeometry( inFeat.geometry() )
@@ -129,8 +120,7 @@ class mcp(GeoAlgorithm):
                 except:
                   GEOS_EXCEPT = False
                   continue
-          
-           
+  
         # there is no selection in input layer
         else:
           
@@ -147,11 +137,7 @@ class mcp(GeoAlgorithm):
               hull = []
               first = True
               #vproviderA.rewind()
-              vproviderA.select( allAttrsA )#, rect )
-             
-              
-              #####calcolo il punto medio
-              
+              vproviderA.select( allAttrsA )
               cx = 0.00
               cy = 0.00
               n = 0
@@ -162,7 +148,6 @@ class mcp(GeoAlgorithm):
                       geom = QgsGeometry(inFeat.geometry())
                       geom= geom.asPoint()
                       n+=1
-           
                       cx += geom.x()
                       cy += geom.y()
               vproviderA.rewind()
@@ -170,7 +155,6 @@ class mcp(GeoAlgorithm):
               cy=(cy / n)
               meanPoint = QgsPoint(cx, cy)
               distArea = QgsDistanceArea()
-              #########################
               nElement=0
               
               while vproviderA.nextFeature( inFeat ):
@@ -178,20 +162,16 @@ class mcp(GeoAlgorithm):
                 idVar = atMap[ index ]
                 if idVar.toString().trimmed() == i.toString().trimmed():
                   if first:
-                    #outID = idVar
                     first = False
                   nElement += 1
                   inGeom = QgsGeometry( inFeat.geometry() )
                   dis_meas = distArea.measureLine(meanPoint, inGeom.asPoint())
                   dist[dis_meas]= inGeom
-                  #points = ftools_utils.extractPoints( inGeom )
                   if perc == 100:
                       
                       points = ftools_utils.extractPoints( inGeom )
                       hull.extend( points )
-                
-                    
-                
+         
                 progress.setPercentage(int(nElement/nFeat * 100))
               if perc <> 100:
                   if perc > 100:
