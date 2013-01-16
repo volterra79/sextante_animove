@@ -40,7 +40,7 @@ class href(GeoAlgorithm):
             perc=self.getParameterValue(href.PERCENT)
             if perc > 100:
                 perc=100
-            res=200
+            res=50
             
             field = self.getParameterValue(href.FIELD)
             vlayerA = QGisLayers.getObjectFromUri(self.getParameterValue(href.INPUT))
@@ -224,7 +224,7 @@ class href(GeoAlgorithm):
                     attrs = feat.attributeMap()
                     for (k,attr) in attrs.iteritems():
                         if k == fldDesc:
-                            if attr != (100.0-perc)/2:
+                            if attr != ((100.0-perc)/2) :
                                 arrayid.append(id)
                             else:
                     
@@ -243,10 +243,12 @@ class href(GeoAlgorithm):
                   outID+=1
                   layer.dataProvider().deleteFeatures(arrayid)       
                   os.remove(currentPath+"/" +raster_name)
+                  
                   if SextanteUtils.isWindows():
                       os.system('del '+currentPath+'/c'+str(n)+'.*')
                   else:
                       os.system('rm '+currentPath+'/c'+str(n)+'.*')
+                  
                   n+=1
                   progress.setPercentage(progress_perc * n)
               del writer
