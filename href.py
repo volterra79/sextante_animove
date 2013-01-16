@@ -259,8 +259,8 @@ class href(GeoAlgorithm):
         self.name = "Kernel Density Estimation"
         self.group = "Tools"
         self.addParameter(ParameterVector(href.INPUT, "Input layer", ParameterVector.VECTOR_TYPE_POINT))
-        self.addParameter(ParameterTableField(href.FIELD, "Field", href.INPUT))
-        self.addParameter(ParameterNumber(href.PERCENT, "Group fixes by", 5, 100, 95))
+        self.addParameter(ParameterTableField(href.FIELD, "Group fixes by", href.INPUT))
+        self.addParameter(ParameterNumber(href.PERCENT, "Percentage of Utilisation Distribution(UD)", 5, 100, 95))
         self.addParameter(ParameterBoolean(href.USE_SELECTED, "Use selected features", False))
         self.addOutput(OutputVector(href.OUTPUT, "Kernel Density Estimation"))
         
