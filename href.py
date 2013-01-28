@@ -23,7 +23,6 @@ from sextante.parameters.ParameterBoolean import ParameterBoolean
 from sextante.parameters.ParameterNumber import ParameterNumber
 import numpy as np
 from scipy import stats,misc
-import matplotlib.pyplot as plt
 from osgeo import gdal, osr
 from scipy import interpolate
 from sextante.core.SextanteUtils import SextanteUtils
