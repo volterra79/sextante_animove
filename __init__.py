@@ -3,7 +3,7 @@ def name():
 def description():
     return "MCP and Kernel functions for UD"
 def version():
-    return "Version 1.2.1"
+    return "Version 1.2.3"
 def icon():
     return "icons/animalmove.png"
 def qgisMinimumVersion():
