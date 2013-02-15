@@ -1,0 +1,28 @@
+; the next section is mandatory
+[general]
+name=AniMove for SEXTANTE
+description=MCP and Kernel functions for UD
+version=1.2.6
+qgisMinimumVersion=1.0
+email=francescoboccacci@libero.it
+; not used yet
+category=Analysis
+
+; end of mandatory metadata
+
+; start of optional metadata
+author=Francesco Boccacci
+
+changelog=
+
+; tags are in comma separated value format, spaces are allowed
+tags=analysis, kernel 
+
+homepage=http://www.faunalia.it/animove
+tracker=http://hub.qgis.org/projects/animoveforsextante
+repository=repository=https://github.com/volterra79/sextante_animove
+
+; path to a icon within the plugin folder
+icon=icons/animalmove.png
+
+experimental=True
