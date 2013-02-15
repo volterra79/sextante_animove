@@ -39,12 +39,22 @@ class mcp(GeoAlgorithm):
         FEATURE_EXCEPT = True
         vproviderA = vlayerA.dataProvider()
         allAttrsA = vproviderA.attributeIndexes()
-        vproviderA.select(allAttrsA)
-        fields = { 0 : QgsField("ID", QVariant.Int),
-                    1 : QgsField("Area",  QVariant.Double),
-                    2 : QgsField("Perim", QVariant.Double),  
-                    3 : QgsField(field, QVariant.String) }
-        writer = self.getOutputFromName(mcp.OUTPUT).getVectorWriter(fields, QGis.WKBPolygon, vproviderA.crs())
+        try:
+                vproviderA.select(allAttrsA)
+        except:
+                pass
+        try:
+                fields = { 0 : QgsField("ID", QVariant.String),
+                            1 : QgsField("Area",  QVariant.Double),
+                            2 : QgsField("Perim", QVariant.Double)  
+                          }
+                writer = self.getOutputFromName(mcp.OUTPUT).getVectorWriter(fields, QGis.WKBPolygon, vproviderA.crs())
+        except:
+                fields = [QgsField("ID", QVariant.String),
+                         QgsField("Area",  QVariant.Double),
+                         QgsField("Perim", QVariant.Double) 
+                         ]
+                writer = self.getOutputFromName(mcp.OUTPUT).getVectorWriter(fields, QGis.WKBPolygon, vproviderA.crs())
         inFeat = QgsFeature()
         outFeat = QgsFeature()
         inGeom = QgsGeometry()
@@ -60,31 +70,48 @@ class mcp(GeoAlgorithm):
         for i in unique:
              
               nElement=0
-              outID = 0
               hull = []
               cx = 0.00 #x of mean coodinate
               cy = 0.00 #y of mean coordinate
-              n = 0
               first = True
-              vproviderA.select(allAttrsA)
-              features = QGisLayers.features(vlayerA)
-              while vproviderA.nextFeature(inFeat):
-                  atMap = inFeat.attributeMap()
-                  idVar = atMap[ index ]
-                  if idVar.toString().trimmed() == i.toString().trimmed():
-                      geom = QgsGeometry(inFeat.geometry())
-                      geom= geom.asPoint()
-                      n+=1
-           
-                      cx += geom.x()
-                      cy += geom.y()
-              cx=(cx / n)
-              cy=(cy / n)
+              nf = 0
+              try:
+                  vproviderA.select(allAttrsA)
+              except:
+                  pass
+              try:
+                  while vproviderA.nextFeature(inFeat):
+                      atMap = inFeat.attributeMap()
+                      idVar = atMap[ index ]
+                      if idVar.toString().trimmed() == i.toString().trimmed():
+                         inGeom = QgsGeometry( inFeat.geometry() )
+                         points = ftools_utils.extractPoints( inGeom )
+                         cx += points[0].x()
+                         cy += points[0].y()
+                         nf+=1
+              except:
+                  features = QGisLayers.features(vlayerA)
+                  for feat in features:
+                      atMap = feat.attributes()
+                      idVar = atMap[ index ]
+                      if idVar.toString().trimmed() == i.toString().trimmed():
+                         inGeom = QgsGeometry( feat.geometry() )
+                         points = ftools_utils.extractPoints( inGeom )
+                         cx += points[0].x()
+                         cy += points[0].y()
+                         nf+=1
+                      
+              cx=(cx / nf)
+              cy=(cy / nf)
               meanPoint = QgsPoint(cx, cy)
               distArea = QgsDistanceArea()
               dist={}
+              features = QGisLayers.features(vlayerA)
               for inFeat in features:
-                atMap = inFeat.attributeMap()
+                try:  
+                    atMap = inFeat.attributeMap()
+                except:
+                    atMap = inFeat.attributes()
                 idVar = atMap[ index ]
                 if idVar.toString().trimmed() == i.toString().trimmed():
                   if first:
@@ -96,15 +123,13 @@ class mcp(GeoAlgorithm):
                   if perc == 100:
                       points = ftools_utils.extractPoints( inGeom )
                       hull.extend( points )
-                
-                progress.setPercentage(int(nElement/nFeat * 100))
               if perc <> 100:
                   if perc > 100:
                       perc = 100
                       SextanteLog.addToLog(SextanteLog.LOG_WARNING, "Please insert a valid percentage (0-100%)")
              
                   hull=self.percpoints(perc,dist,nElement)
-                  hull=self.percpoints(perc,dist,nElement)
+                  
               if len( hull ) >= 3:
                 nfeat = len(hull) * perc / 100
                 tmpGeom = QgsGeometry( outGeom.fromMultiPoint( hull ) )
@@ -114,17 +139,21 @@ class mcp(GeoAlgorithm):
                   measure = QgsDistanceArea()
                   perim=measure.measurePerimeter(outGeom)
                   area=measure.measure(outGeom)
-                  outFeat.addAttribute( 0, QVariant( outID ) )
-                  outFeat.addAttribute( 1, QVariant( area ) )
-                  outFeat.addAttribute( 2, QVariant( perim ) )
-                  outFeat.addAttribute( 3, QVariant( i.toString() ) )
+                  try:
+                      outFeat.addAttribute( 0, QVariant( i.toString() ) )
+                      outFeat.addAttribute( 1, QVariant( area ) )
+                      outFeat.addAttribute( 2, QVariant( perim ) )
+                  except:
+                      outFeat.setAttributes([QVariant(i.toString()),QVariant(area),QVariant(perim)])
                   writer.addFeature( outFeat )
-                  outID+=1
+                  
+                  
                 except:
                   GEOS_EXCEPT = False
                   continue
-                n+=1
-                progress.setPercentage(progress_perc * n)
+              n+=1
+              progress.setPercentage(progress_perc*n)
+            
         del writer
 
         if not GEOS_EXCEPT:

@@ -10,6 +10,7 @@ from sextante.core.QGisLayers import QGisLayers
 from sextante.core.GeoAlgorithmExecutionException import GeoAlgorithmExecutionException
 from sextante.outputs.OutputVector import OutputVector
 
+
 try: #qgis 1.8 sextante 1.08
     from sextante.ftools import ftools_utils
 except:
@@ -25,7 +26,10 @@ import numpy as np
 from scipy import stats,misc
 from osgeo import gdal, osr
 from scipy import interpolate
+import datetime
 from sextante.core.SextanteUtils import SextanteUtils
+
+
 
 class href(GeoAlgorithm):
 
@@ -33,6 +37,7 @@ class href(GeoAlgorithm):
     OUTPUT = "OUTPUT"
     FIELD = "FIELD"
     PERCENT = "PERCENT"
+    
    
    
 
@@ -40,7 +45,9 @@ class href(GeoAlgorithm):
         return QtGui.QIcon(os.path.dirname(__file__) + "/icons/href.png")
 
     def processAlgorithm(self, progress):
+        
             currentPath = os.path.dirname(os.path.abspath(__file__))
+            
             perc=self.getParameterValue(href.PERCENT)
             if perc > 100:
                 perc=100
@@ -48,16 +55,28 @@ class href(GeoAlgorithm):
             
             field = self.getParameterValue(href.FIELD)
             vlayerA = QGisLayers.getObjectFromUri(self.getParameterValue(href.INPUT))
+            self.epsg = vlayerA.crs().srsid()
             GEOS_EXCEPT = True
             FEATURE_EXCEPT = True
             vproviderA = vlayerA.dataProvider()
+            name = vlayerA.name()
             allAttrsA = vproviderA.attributeIndexes()
-            vproviderA.select(allAttrsA)
-            fields = { 0 : QgsField("ID", QVariant.Int),
-                        1 : QgsField("Area",  QVariant.Double),
-                        2 : QgsField("Perim", QVariant.Double),  
-                        3 : QgsField(field, QVariant.String) }
-            writer = self.getOutputFromName(href.OUTPUT).getVectorWriter(fields, QGis.WKBPolygon, vproviderA.crs())
+            try:
+                vproviderA.select(allAttrsA)
+            except:
+                pass
+            try:
+                fields = { 0 : QgsField("ID", QVariant.String),
+                            1 : QgsField("Area",  QVariant.Double),
+                            2 : QgsField("Perim", QVariant.Double)  
+                             }
+                writer = self.getOutputFromName(href.OUTPUT).getVectorWriter(fields, QGis.WKBPolygon, vproviderA.crs())
+            except:
+                fields = [QgsField("ID", QVariant.String),
+                         QgsField("Area",  QVariant.Double),
+                         QgsField("Perim", QVariant.Double) 
+                         ]
+                writer = self.getOutputFromName(href.OUTPUT).getVectorWriter(fields, QGis.WKBPolygon, vproviderA.crs())
             inFeat = QgsFeature()
             outFeat = QgsFeature()
             inGeom = QgsGeometry()
@@ -67,18 +86,28 @@ class href(GeoAlgorithm):
             nFeat = len(features)
             unique = ftools_utils.getUniqueValues(vproviderA, index)
             nFeat = nFeat * len(unique)
-            progress_perc=100/len(unique)
+            progress_perc= 100/len(unique)
             n = 0
             outID = 0
+            
+            
+            
             for i in unique:
                   nElement=0
                   xPoints = []
                   yPoints = []
                   first = True
-                  vproviderA.select(allAttrsA)
+                  try:
+                      vproviderA.select(allAttrsA)
+                  except:
+                      pass
                   features = QGisLayers.features(vlayerA)
                   for inFeat in features:
-                    atMap = inFeat.attributeMap()
+                      
+                    try:
+                        atMap = inFeat.attributeMap()
+                    except:
+                        atMap = inFeat.attributes()
                     idVar = atMap[ index ]
                     if idVar.toString().trimmed() == i.toString().trimmed():
                         nElement += 1
@@ -100,23 +129,26 @@ class href(GeoAlgorithm):
                   kernel = stats.kde.gaussian_kde(values)
                   Z = np.reshape(kernel(positions).T, X.T.shape)
                   
-                  raster_name = 'r'+str(n)
+                  raster_name = str(name)+'_'+str(perc)+'_'+str(i.toString())+ '_'+str(datetime.date.today())
                   int = str(((100.0-perc)/2))
                  
-                  self.to_geotiff(currentPath+'/'+raster_name, xmin,xmax,ymin,ymax,X,Y, Z) 
+                  self.to_geotiff(currentPath+'/raster_output/'+raster_name, xmin,xmax,ymin,ymax,X,Y, Z) 
                   
                   if SextanteUtils.isWindows():
-                      os.system("gdal_contour.exe "+currentPath+"/" +raster_name+" -a values -fl " + int + " " + currentPath+"/c"+str(n)+".shp")
-                      commands = ["cmd.exe", "/C ", "gdal_polygonize.bat"]
+                      os.system("gdal_contour.exe "+currentPath+"/raster_output/" +raster_name+" -a values -fl " + int + " " + currentPath+"/c"+str(n)+".shp")
                   else:
-                      os.system("gdal_contour "+currentPath+"/" +raster_name+" -a values -fl " + int + " " + currentPath+"/c"+str(n)+".shp")
-                  layer = QgsVectorLayer(currentPath+"/c"+str(n)+".shp", "c"+str(n), "ogr")       
+                      os.system("gdal_contour "+currentPath+"/raster_output/" +raster_name+" -a values -fl " + int + " " + currentPath+"/c"+str(n)+".shp")
+                  layer = QgsVectorLayer(currentPath+"/c"+str(n)+".shp", "c"+str(n), "ogr")
+                     
                   
                   provider = layer.dataProvider()
     
                   feat = QgsFeature()
                   allAttrs = provider.attributeIndexes()
-                  provider.select(allAttrs)
+                  try:
+                      provider.select(allAttrs)
+                  except:
+                      pass
                   caps = layer.dataProvider().capabilities()
                   fldDesc = provider.fieldNameIndex("values")
                   arrayid=[]
@@ -126,25 +158,38 @@ class href(GeoAlgorithm):
                   area = 0
                   perim = 0
                   measure = QgsDistanceArea()
-                  while provider.nextFeature( feat ):
+                  try:
+                      while provider.nextFeature( feat ):
                     
-                    id = feat.id()
-                    attrs = feat.attributeMap()
-                    outGeom = feat.geometry().asPolyline()
-                    perim=perim + measure.measurePerimeter(QgsGeometry.fromPolygon([outGeom]))
-                    area=area + measure.measure(QgsGeometry.fromPolygon([outGeom]))
-                    polyGeom.append(outGeom) 
-                                
+                            id = feat.id()
+                            attrs = feat.attributeMap()
+                            outGeom = feat.geometry().asPolyline()
+                            perim=perim + measure.measurePerimeter(QgsGeometry.fromPolygon([outGeom]))
+                            area=area + measure.measure(QgsGeometry.fromPolygon([outGeom]))
+                            polyGeom.append(outGeom) 
+                  except:
+                        features = QGisLayers.features(layer)
+                        for feat in features:
+                            id = feat.id()
+                            attrs = feat.attributes()
+                            outGeom = feat.geometry().asPolyline()
+                            perim=perim + measure.measurePerimeter(QgsGeometry.fromPolygon([outGeom]))
+                            area=area + measure.measure(QgsGeometry.fromPolygon([outGeom]))
+                            polyGeom.append(outGeom)
+           
                   outFeat.setGeometry(QgsGeometry.fromPolygon(polyGeom))
-                  outFeat.addAttribute( 0, QVariant( outID) )
-                  outFeat.addAttribute( 1, QVariant( area ) )
-                  outFeat.addAttribute( 2, QVariant( perim ) )
-                  outFeat.addAttribute( 3, QVariant( i.toString() ) )
+                  try:
+                      outFeat.addAttribute( 0, QVariant( i.toString() ) )
+                      outFeat.addAttribute( 1, QVariant( area ) )
+                      outFeat.addAttribute( 2, QVariant( perim ) )
+                     
+                  
+                  except:
+                     
+                      outFeat.setAttributes([QVariant(i.toString()),QVariant(area),QVariant(perim)])
                   writer.addFeature(outFeat)
                   outID+=1
-                  layer.dataProvider().deleteFeatures(arrayid)       
-                  os.remove(currentPath+"/" +raster_name)
-                  
+                  layer.dataProvider().deleteFeatures(arrayid)                     
                   if SextanteUtils.isWindows():
                       os.system('del '+currentPath+'/c'+str(n)+'.*')
                   else:
@@ -152,7 +197,8 @@ class href(GeoAlgorithm):
                   
                   
                   n+=1
-                  progress.setPercentage(progress_perc * n)    
+                  progress.setPercentage(progress_perc*n)  
+                  
             del writer
             if not GEOS_EXCEPT:
                       SextanteLog.addToLog(SextanteLog.LOG_WARNING, "Geometry exception while computing convex hull")
@@ -179,6 +225,9 @@ class href(GeoAlgorithm):
         xps = (xmax - xmin) / float(len(X))
         yps = (ymax - ymin) / float(len(Y))
         out.SetGeoTransform((xmin, xps, 0, ymin, 0, yps))
+        coord_system = osr.SpatialReference()
+        coord_system.ImportFromEPSG(self.epsg)
+        out.SetProjection(coord_system.ExportToWkt())
         
         Z = Z.clip(0) * 100.0/Z.max()
         
